@@ -20,7 +20,8 @@ but it is also compatible with:
 # Use in your project
 
 ```bash
-zig fetch --save https://github.com/sweetbbak/anyascii-zig
+# or pick a specific branch or commit
+zig fetch --save https://github.com/sweetbbak/anyascii-zig/archive/refs/heads/main.zip
 ```
 
 in `build.zig`:

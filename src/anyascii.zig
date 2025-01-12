@@ -4,7 +4,7 @@ const table = @import("table.zig");
 const bank = table.bank;
 
 /// Convert a unicode codepoint to its ascii equivalent.
-pub fn anyascii(utf32: u32) []const u8 {
+pub fn convert(utf32: u32) []const u8 {
     const blocknum = utf32 >> 8;
     const b = table.block(blocknum);
     const lo = (utf32 & 0xff) * 3;
@@ -27,13 +27,13 @@ pub fn anyascii(utf32: u32) []const u8 {
 /// transliterate a string into its ascii equivalent using a fixed size
 /// buffer known at compile time
 // pub fn anyascii_string(input: []const u8, comptime bufsize: usize) ![]const u8 {
-pub fn anyascii_string(input: []const u8, writer: anytype) !usize {
+pub fn transliterate(input: []const u8, writer: anytype) !usize {
     var uni = try std.unicode.Utf8View.init(input);
     var iterator = uni.iterator();
 
     var written: usize = 0;
     while (iterator.nextCodepoint()) |codepoint| {
-        const string: []const u8 = anyascii(codepoint);
+        const string: []const u8 = convert(codepoint);
         const n = try writer.write(string);
         written += n;
     }
@@ -43,7 +43,7 @@ pub fn anyascii_string(input: []const u8, writer: anytype) !usize {
 
 /// convert a given UTF-8 string to its ASCII equivalent using anyascii
 /// using an allocator
-pub fn anyascii_string_alloc(allocator: Allocator, str: []const u8) ![]u8 {
+pub fn to_string(allocator: Allocator, str: []const u8) ![]u8 {
     // Get a UTF8 iterator.
     var iterator = (try std.unicode.Utf8View.init(str)).iterator();
 
@@ -56,7 +56,7 @@ pub fn anyascii_string_alloc(allocator: Allocator, str: []const u8) ![]u8 {
 
     // For each codepoint, convert it to ascii.
     while (iterator.nextCodepoint()) |codepoint| {
-        const chars = anyascii(codepoint);
+        const chars = convert(codepoint);
         _ = try writer.write(chars);
     }
 
@@ -67,7 +67,7 @@ pub fn anyascii_string_alloc(allocator: Allocator, str: []const u8) ![]u8 {
 /// Test the conversion of a given UTF-8 character to its ASCII equivalent.
 fn check_alloc(input: []const u8, expected: []const u8) !void {
     const allocator = std.testing.allocator;
-    const buf = try anyascii_string_alloc(allocator, input);
+    const buf = try to_string(allocator, input);
     defer allocator.free(buf);
     try std.testing.expectEqualStrings(expected, buf);
 }
@@ -78,13 +78,13 @@ fn check(input: []const u8, expected: []const u8) !void {
     var fbs = std.io.fixedBufferStream(&buf);
     const writer = fbs.writer().any();
 
-    const n = try anyascii_string(input, writer);
+    const n = try transliterate(input, writer);
     try std.testing.expectEqualStrings(expected, buf[0..n]);
 }
 
 /// check a codepoint for testing
 fn checkcp(utf32: u32, str: []const u8) !void {
-    const output = anyascii(utf32);
+    const output = convert(utf32);
     if (!(std.mem.eql(u8, output, str))) return error.NoMatch;
 }
 

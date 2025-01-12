@@ -35,11 +35,12 @@ pub fn build(b: *std.Build) void {
 
     b.installArtifact(static_lib);
 
-    _ = b.addModule("anyascii", .{
+    const anyascii = b.addModule("anyascii", .{
         .root_source_file = b.path("src/anyascii.zig"),
         .target = target,
         .optimize = optimize,
     });
+    _ = anyascii;
 
     const lib_unit_tests = b.addTest(.{
         .root_source_file = b.path("src/anyascii.zig"),
