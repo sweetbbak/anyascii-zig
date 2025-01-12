@@ -11,4 +11,12 @@ pub fn main() !void {
 
     const s = anyascii.anyascii(0xFA);
     std.debug.print("{s}\n", .{s});
+
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    const allocator = gpa.allocator();
+    defer _ = gpa.deinit();
+    
+    const str = try anyascii.anyascii_string_alloc(allocator, "🫣");
+    defer allocator.free(str);
+    std.debug.print("{s}\n", .{str});
 }
